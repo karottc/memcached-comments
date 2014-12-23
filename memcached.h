@@ -342,13 +342,13 @@ extern struct settings settings;
  * Structure for storing items within memcached.
  */
 typedef struct _stritem {
-    struct _stritem *next;
-    struct _stritem *prev;
+    struct _stritem *next;    // 指向链表的下一个指针
+    struct _stritem *prev;    // 指向链表的前一个指针
     struct _stritem *h_next;    /* hash chain next */
     rel_time_t      time;       /* least recent access */
-    rel_time_t      exptime;    /* expire time */
-    int             nbytes;     /* size of data */
-    unsigned short  refcount;
+    rel_time_t      exptime;    /* expire time */ // 消亡时间
+    int             nbytes;     /* size of data */ 
+    unsigned short  refcount;    // 引用计数
     uint8_t         nsuffix;    /* length of flags-and-length string */
     uint8_t         it_flags;   /* ITEM_* above */
     uint8_t         slabs_clsid;/* which slab class we're in */

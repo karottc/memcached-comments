@@ -151,6 +151,7 @@ static void assoc_start_expand(void) {
 }
 
 /* Note: this isn't an assoc_update.  The key must not already exist to call this */
+// insert函数的插入，必须是不存在的元素
 int assoc_insert(item *it, const uint32_t hv) {
     unsigned int oldbucket;
 
@@ -167,6 +168,8 @@ int assoc_insert(item *it, const uint32_t hv) {
     }
 
     hash_items++;
+    // 当前没有扩展hash table并且hash table中的现有项的个数大于原来的hash table
+    // 的个数的1.5倍。
     if (! expanding && hash_items > (hashsize(hashpower) * 3) / 2) {
         assoc_start_expand();
     }

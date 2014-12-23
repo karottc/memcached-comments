@@ -31,7 +31,12 @@ typedef struct {
     uint64_t crawler_reclaimed;
     uint64_t lrutail_reflocked;
 } itemstats_t;
-
+/* 当memcached没有足够的内存使用时，必须选择性的回收一些item，回收采用LRU算法，
+ * 这就需要维护一个按照最近访问时间排序的LRU队列，在memcached里面，每个slabclass
+ * 维护一个链表，比如slabclass[i]的链表头指针为heads[i],尾指针为tails[i],已经分
+ * 配出去的item都存储在链表中，而且链表中的item安装最近访问时间排序，所以这就是
+ * 一个LRU的队列。
+ */
 static item *heads[LARGEST_ID];
 static item *tails[LARGEST_ID];
 static crawler crawlers[LARGEST_ID];
@@ -326,8 +331,8 @@ int do_item_link(item *it, const uint32_t hv) {
 
     /* Allocate a new CAS ID on link. */
     ITEM_set_cas(it, (settings.use_cas) ? get_cas_id() : 0);
-    assoc_insert(it, hv);
-    item_link_q(it);
+    assoc_insert(it, hv);   // 放入hash table
+    item_link_q(it);        // 放入LRU队列
     refcount_incr(&it->refcount);
     mutex_unlock(&cache_lock);
 
@@ -343,9 +348,9 @@ void do_item_unlink(item *it, const uint32_t hv) {
         stats.curr_bytes -= ITEM_ntotal(it);
         stats.curr_items -= 1;
         STATS_UNLOCK();
-        assoc_delete(ITEM_key(it), it->nkey, hv);
-        item_unlink_q(it);
-        do_item_remove(it);
+        assoc_delete(ITEM_key(it), it->nkey, hv);  // 从hash table中删除
+        item_unlink_q(it);                         // 从LRU队列中删除
+        do_item_remove(it);                        // 释放item内存
     }
     mutex_unlock(&cache_lock);
 }

@@ -25,21 +25,21 @@
 
 typedef struct {
     unsigned int size;      /* sizes of items */
-    unsigned int perslab;   /* how many items per slab */
+    unsigned int perslab;   /* how many items per slab */  // item的个数
 
-    void *slots;           /* list of item ptrs */
-    unsigned int sl_curr;   /* total free items in list */
+    void *slots;           /* list of item ptrs */ // 回收的item的链表
+    unsigned int sl_curr;   /* total free items in list */  // 当前回收的空闲的item的数量
 
-    unsigned int slabs;     /* how many slabs were allocated for this class */
+    unsigned int slabs;     /* how many slabs were allocated for this class */ // 插槽的总容量
 
     void **slab_list;       /* array of slab pointers */
-    unsigned int list_size; /* size of prev array */
+    unsigned int list_size; /* size of prev array */ // slab的数量
 
     unsigned int killing;  /* index+1 of dying slab, or zero if none */
     size_t requested; /* The number of requested bytes */
 } slabclass_t;
 
-static slabclass_t slabclass[MAX_NUMBER_OF_SLAB_CLASSES];
+static slabclass_t slabclass[MAX_NUMBER_OF_SLAB_CLASSES];   // 大小是 201
 static size_t mem_limit = 0;
 static size_t mem_malloced = 0;
 static int power_largest;
@@ -92,6 +92,7 @@ unsigned int slabs_clsid(const size_t size) {
  * Determines the chunk sizes and initializes the slab class descriptors
  * accordingly.
  */
+// limit的默认值是64M = 64 * 1024 * 1024
 void slabs_init(const size_t limit, const double factor, const bool prealloc) {
     int i = POWER_SMALLEST - 1;
     unsigned int size = sizeof(item) + settings.chunk_size;
