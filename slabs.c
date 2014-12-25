@@ -35,6 +35,8 @@ typedef struct {
     void **slab_list;       /* array of slab pointers */
     unsigned int list_size; /* size of prev array */ // slab的数量
 
+    // killing只在slabs rebalance过程中会被用到，当Killing !＝0时表示当前slabclass
+    // 中killing+1所在slab正在被rebalance.
     unsigned int killing;  /* index+1 of dying slab, or zero if none */
     size_t requested; /* The number of requested bytes */
 } slabclass_t;
@@ -44,9 +46,9 @@ static size_t mem_limit = 0;
 static size_t mem_malloced = 0;
 static int power_largest;
 
-static void *mem_base = NULL;
-static void *mem_current = NULL;
-static size_t mem_avail = 0;
+static void *mem_base = NULL;   // 用来标识是否prealloc并且成功。
+static void *mem_current = NULL;  // 表示alloc出来的内存，当前尚未分配给slabclass的
+static size_t mem_avail = 0;   // mem_base - mem_current的长度
 
 /**
  * Access to the slab allocator is protected by this lock
@@ -95,6 +97,7 @@ unsigned int slabs_clsid(const size_t size) {
 // limit的默认值是64M = 64 * 1024 * 1024
 void slabs_init(const size_t limit, const double factor, const bool prealloc) {
     int i = POWER_SMALLEST - 1;
+    // chunk_size的默认值是48
     unsigned int size = sizeof(item) + settings.chunk_size;
 
     mem_limit = limit;

@@ -584,6 +584,7 @@ item *do_item_get(const char *key, const size_t nkey, const uint32_t hv) {
         /* Optimization for slab reassignment. prevents popular items from
          * jamming in busy wait. Can only do this here to satisfy lock order
          * of item_lock, cache_lock, slabs_lock. */
+        // rebalance会对item的存储位置进行调整，所以需要unlink和remove
         if (slab_rebalance_signal &&
             ((void *)it >= slab_rebal.slab_start && (void *)it < slab_rebal.slab_end)) {
             do_item_unlink_nolock(it, hv);

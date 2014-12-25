@@ -251,24 +251,24 @@ struct thread_stats {
  * Global stats.
  */
 struct stats {
-    pthread_mutex_t mutex;
-    unsigned int  curr_items;
-    unsigned int  total_items;
-    uint64_t      curr_bytes;
-    unsigned int  curr_conns;
-    unsigned int  total_conns;
-    uint64_t      rejected_conns;
+    pthread_mutex_t mutex;               // 本结构的互斥信号量，因为更新信息需要原子操作
+    unsigned int  curr_items;            // 现在有效的item数
+    unsigned int  total_items;           // 总共存储的item数
+    uint64_t      curr_bytes;            // 当前有效的字节数
+    unsigned int  curr_conns;            // 当前客户端的链接数
+    unsigned int  total_conns;           // 总连接数
+    uint64_t      rejected_conns;        // 拒绝过的连接数
     uint64_t      malloc_fails;
     unsigned int  reserved_fds;
     unsigned int  conn_structs;
-    uint64_t      get_cmds;
-    uint64_t      set_cmds;
-    uint64_t      touch_cmds;
-    uint64_t      get_hits;
-    uint64_t      get_misses;
-    uint64_t      touch_hits;
-    uint64_t      touch_misses;
-    uint64_t      evictions;
+    uint64_t      get_cmds;              // get命令数
+    uint64_t      set_cmds;              // set命令数
+    uint64_t      touch_cmds;            // touch命令数
+    uint64_t      get_hits;              // get命中的数目
+    uint64_t      get_misses;            // get丢失的数目
+    uint64_t      touch_hits;            // touch命中的数目
+    uint64_t      touch_misses;          // touch丢失的数目
+    uint64_t      evictions;             // 回收的item数目
     uint64_t      reclaimed;
     time_t        started;          /* when the process was started */
     bool          accepting_conns;  /* whether we are currently accepting */
@@ -290,9 +290,9 @@ struct stats {
  * Globally accessible settings as derived from the commandline.
  */
 struct settings {
-    size_t maxbytes;
-    int maxconns;
-    int port;
+    size_t maxbytes;    // memcached的最大容量，默认是64M
+    int maxconns;       // 最大链接数，默认1024
+    int port;           // tcp端口，默认是11211
     int udpport;
     char *inter;
     int verbose;
@@ -300,7 +300,7 @@ struct settings {
     int evict_to_free;
     char *socketpath;   /* path to unix socket if using local socket */
     int access;  /* access mask (a la chmod) for unix domain socket */
-    double factor;          /* chunk size growth factor */
+    double factor;          /* chunk size growth factor */ // 默认值是1.25
     int chunk_size;
     int num_threads;        /* number of worker (without dispatcher) libevent threads to run */
     int num_threads_per_udp; /* number of worker threads serving each udp socket */
@@ -311,7 +311,7 @@ struct settings {
     bool use_cas;
     enum protocol binding_protocol;
     int backlog;
-    int item_size_max;        /* Maximum item size, and upper end for slabs */
+    int item_size_max;        /* Maximum item size, and upper end for slabs */ // 初始化为1M
     bool sasl;              /* SASL on/off */
     bool maxconns_fast;     /* Whether or not to early close connections */
     bool lru_crawler;        /* Whether or not to enable the autocrawler thread */
@@ -330,12 +330,15 @@ extern struct stats stats;
 extern time_t process_started;
 extern struct settings settings;
 
+// 该item已被使用
 #define ITEM_LINKED 1
+// 该item使用CAS结构
 #define ITEM_CAS 2
 
 /* temp */
+// 该item未使用，挂在slots上
 #define ITEM_SLABBED 4
-
+// 该状态表示被get出去了
 #define ITEM_FETCHED 8
 
 /**
@@ -380,9 +383,10 @@ typedef struct {
     uint32_t        remaining;  /* Max keys to crawl per slab per invocation */
 } crawler;
 
+// 工作线程的结构
 typedef struct {
     pthread_t thread_id;        /* unique ID of this thread */
-    struct event_base *base;    /* libevent handle this thread uses */
+    struct event_base *base;    /* libevent handle this thread uses */ // libevent处理框架，每个线程对应一个event_base
     struct event notify_event;  /* listen event for notify pipe */
     int notify_receive_fd;      /* receiving end of notify pipe */
     int notify_send_fd;         /* sending end of notify pipe */
@@ -392,6 +396,7 @@ typedef struct {
     uint8_t item_lock_type;     /* use fine-grained or global item lock */
 } LIBEVENT_THREAD;
 
+// 主线程的结构
 typedef struct {
     pthread_t thread_id;        /* unique ID of this thread */
     struct event_base *base;    /* libevent handle this thread uses */
