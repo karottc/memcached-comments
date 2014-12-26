@@ -531,6 +531,9 @@ extern int daemonize(int nochdir, int noclose);
 
 static inline int mutex_lock(pthread_mutex_t *mutex)
 {
+    // pthread_mutex_trylock 是互斥锁pthread_mutex_lock的非阻塞版本，即当前的
+    // mutex被锁住的时候立即返回一个值，成功返回0，不成功返回非0值，这段程序这
+    // 样写，也就相当于是阻塞版本，因为不成功会一直在while循环里面。
     while (pthread_mutex_trylock(mutex));
     return 0;
 }

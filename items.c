@@ -41,7 +41,7 @@ static item *heads[LARGEST_ID];
 static item *tails[LARGEST_ID];
 static crawler crawlers[LARGEST_ID];
 static itemstats_t itemstats[LARGEST_ID];
-static unsigned int sizes[LARGEST_ID];
+static unsigned int sizes[LARGEST_ID];    // 每个slabclass的item的个数
 
 static int crawler_count = 0;
 static volatile int do_run_lru_crawler_thread = 0;
@@ -284,6 +284,7 @@ static void item_link_q(item *it) { /* item is the new head */
     tail = &tails[it->slabs_clsid];
     assert(it != *head);
     assert((*head && *tail) || (*head == 0 && *tail == 0));
+    // 插入链表的头部，这样就保证了LRU队列的时间降序
     it->prev = 0;
     it->next = *head;
     if (it->next) it->next->prev = it;

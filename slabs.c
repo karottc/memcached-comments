@@ -33,7 +33,7 @@ typedef struct {
     unsigned int slabs;     /* how many slabs were allocated for this class */ // 插槽的总容量
 
     void **slab_list;       /* array of slab pointers */
-    unsigned int list_size; /* size of prev array */ // slab的数量
+    unsigned int list_size; /* size of prev array */
 
     // killing只在slabs rebalance过程中会被用到，当Killing !＝0时表示当前slabclass
     // 中killing+1所在slab正在被rebalance.
@@ -152,6 +152,7 @@ void slabs_init(const size_t limit, const double factor, const bool prealloc) {
     }
 }
 
+// maxslabs是slabclass的数组项
 static void slabs_preallocate (const unsigned int maxslabs) {
     int i;
     unsigned int prealloc = 0;
@@ -236,6 +237,10 @@ static void *do_slabs_alloc(const size_t size, unsigned int id) {
 
     /* fail unless we have space at the end of a recently allocated page,
        we have something on our freelist, or we could allocate a new page */
+    /** 1.首先尝试从free list中取，如果成功就用；
+     *  2.free list为空，就new一个slab，new slab的时候会顺便初始化slots；
+     *  3.然后从new出来的slab的free list，也就是slots中去一个item。
+     */
     if (! (p->sl_curr != 0 || do_slabs_newslab(id) != 0)) {
         /* We don't have more memory available */
         ret = NULL;
