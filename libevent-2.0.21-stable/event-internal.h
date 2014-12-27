@@ -65,7 +65,7 @@ struct eventop {
 	 * run the backend, and return it.  The returned pointer will get
 	 * stored by event_init into the event_base.evbase field.  On failure,
 	 * this function should return NULL. */
-	void *(*init)(struct event_base *);
+	void *(*init)(struct event_base *);    // 初始化
 	/** Enable reading/writing on a given fd or signal.  'events' will be
 	 * the events that we're trying to enable: one or more of EV_READ,
 	 * EV_WRITE, EV_SIGNAL, and EV_ET.  'old' will be those events that
@@ -74,16 +74,20 @@ struct eventop {
 	 * fdinfo field below.  It will be set to 0 the first time the fd is
 	 * added.  The function should return 0 on success and -1 on error.
 	 */
+    // 注册事件
 	int (*add)(struct event_base *, evutil_socket_t fd, short old, short events, void *fdinfo);
 	/** As "add", except 'events' contains the events we mean to disable. */
+    // 删除事件
 	int (*del)(struct event_base *, evutil_socket_t fd, short old, short events, void *fdinfo);
 	/** Function to implement the core of an event loop.  It must see which
 	    added events are ready, and cause event_active to be called for each
 	    active event (usually via event_io_active or such).  It should
 	    return 0 on success and -1 on error.
 	 */
+    // 事件分发
 	int (*dispatch)(struct event_base *, struct timeval *);
 	/** Function to clean up and free our data from the event_base. */
+    // 注销，释放资源
 	void (*dealloc)(struct event_base *);
 	/** Flag: set if we need to reinitialize the event base after we fork.
 	 */
@@ -211,6 +215,12 @@ struct event_base {
 	 * have triggered, and whose callbacks need to be called).  Low
 	 * priority numbers are more important, and stall higher ones.
 	 */
+    /*  event_list的定义如下: 
+     * struct event_list {
+     *      struct event *tqh_first;
+     *      struct event **tqh_last;
+     *  }
+     */
 	struct event_list *activequeues;
 	/** The length of the activequeues array */
 	int nactivequeues;

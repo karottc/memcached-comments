@@ -188,6 +188,7 @@ enum network_transport {
     udp_transport
 };
 
+// 当hash table容量不够，需要扩张的时候就会加GLOBAL锁。
 enum item_lock_types {
     ITEM_LOCK_GRANULAR = 0,
     ITEM_LOCK_GLOBAL

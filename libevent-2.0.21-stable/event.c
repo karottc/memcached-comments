@@ -2027,7 +2027,7 @@ static inline int
 event_add_internal(struct event *ev, const struct timeval *tv,
     int tv_is_absolute)
 {
-	struct event_base *base = ev->ev_base;
+	struct event_base *base = ev->ev_base;   // 需要注册的event_base
 	int res = 0;
 	int notify = 0;
 
@@ -2049,6 +2049,10 @@ event_add_internal(struct event *ev, const struct timeval *tv,
 	 * prepare for timeout insertion further below, if we get a
 	 * failure on any step, we should not change any state.
 	 */
+    // 新的timer事件，调用timer head接口在对上预留一个位置。
+    // 注：这样能保证该操作的原子性：
+    // 向系统I/O机制注册可能会失败，而当在对上预留成功后，定时事件的添加将肯定
+    // 不会失败；而预留位置的可能结果是堆扩充，但是内部的元素并不会改变。
 	if (tv != NULL && !(ev->ev_flags & EVLIST_TIMEOUT)) {
 		if (min_heap_reserve(&base->timeheap,
 			1 + min_heap_size(&base->timeheap)) == -1)
@@ -2067,13 +2071,14 @@ event_add_internal(struct event *ev, const struct timeval *tv,
 	}
 #endif
 
+    // 如果事件ev不在已注册或者激活的链表中，则调用evbase注册事件。
 	if ((ev->ev_events & (EV_READ|EV_WRITE|EV_SIGNAL)) &&
 	    !(ev->ev_flags & (EVLIST_INSERTED|EVLIST_ACTIVE))) {
 		if (ev->ev_events & (EV_READ|EV_WRITE))
 			res = evmap_io_add(base, ev->ev_fd, ev);
 		else if (ev->ev_events & EV_SIGNAL)
 			res = evmap_signal_add(base, (int)ev->ev_fd, ev);
-		if (res != -1)
+		if (res != -1)   // 注册成功，插入event到已注册链表中。
 			event_queue_insert(base, ev, EVLIST_INSERTED);
 		if (res == 1) {
 			/* evmap says we need to notify the main thread. */

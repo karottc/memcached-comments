@@ -54,12 +54,12 @@ extern "C" {
 /* For evkeyvalq */
 #include <event2/keyvalq_struct.h>
 
-#define EVLIST_TIMEOUT	0x01
-#define EVLIST_INSERTED	0x02
-#define EVLIST_SIGNAL	0x04
-#define EVLIST_ACTIVE	0x08
-#define EVLIST_INTERNAL	0x10
-#define EVLIST_INIT	0x80
+#define EVLIST_TIMEOUT	0x01       // event在time堆中
+#define EVLIST_INSERTED	0x02       // event在已注册事件链表中
+#define EVLIST_SIGNAL	0x04       // 
+#define EVLIST_ACTIVE	0x08       // event在激活链表中
+#define EVLIST_INTERNAL	0x10       // 内部使用标记
+#define EVLIST_INIT	0x80           // event已被初始化
 
 /* EVLIST_X_ Private space: 0x1000-0xf000 */
 #define EVLIST_ALL	(0xf000 | 0x9f)
@@ -82,20 +82,32 @@ struct name {					\
 	struct type **tqh_last;			\
 }
 #endif
+#ifdef KAROTTC_DEBUG
+struct event_list {
+	struct event *tqh_first;
+	struct event **tqh_last;
+}
+#endif
 
 struct event_base;
 struct event {
+    // 将所有的激活事件放入到active list中，然后遍历active list进行调度。
 	TAILQ_ENTRY(event) ev_active_next;
 	TAILQ_ENTRY(event) ev_next;
 	/* for managing timeouts */
+    // 使用小根堆来管理超时事件。
 	union {
 		TAILQ_ENTRY(event) ev_next_with_common_timeout;
 		int min_heap_idx;
 	} ev_timeout_pos;
+    // 对于I/O事件，ev_fd是一个文件描述符，对于signal事件，ev_fd是一个信号。
 	evutil_socket_t ev_fd;
 
 	struct event_base *ev_base;
 
+    // 信号和I/O事件不能同时设置.
+    // ev_io_next表示I/O事件在链表中断呃位置，这个链表是“已注册事件链表”。
+    // ev_signal_next是signal事件在事件链表中的位置。
 	union {
 		/* used for io events */
 		struct {
@@ -112,14 +124,24 @@ struct event {
 		} ev_signal;
 	} _ev;
 
+    // event 关注的事件类型，一般是以下三种类型之一：
+    // 1. I/O事件：EV_WRITE和EV_READ
+    // 2. 定时事件：EV_TIMEOUT
+    // 3. 信号：EV_SIGNAL
+    // 辅助选项：EV_PERSIST，表明是一个永久事件。
+    // libevent利用这个结构将这三种事件统一起来。
 	short ev_events;
 	short ev_res;		/* result passed to event callback */
+    // 用来标记event信息的字段，表明其当前的状态，值为：
+    // EVLIST_TIMEOUT, EVLIST_XXXX
 	short ev_flags;
 	ev_uint8_t ev_pri;	/* smaller numbers are higher priority */
 	ev_uint8_t ev_closure;
 	struct timeval ev_timeout;
 
 	/* allows us to adopt for different types of events */
+    // 这个回调函数是被ev_base使用,三个参数分别是：
+    // 第一个对应ev_fd, 第二个对应ev_events，第三个对应ev_arg。
 	void (*ev_callback)(evutil_socket_t, short, void *arg);
 	void *ev_arg;
 };

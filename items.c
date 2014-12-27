@@ -138,6 +138,7 @@ item *do_item_alloc(char *key, const size_t nkey, const int flags,
         if (hv == cur_hv || (hold_lock = item_trylock(hv)) == NULL)
             continue;
         /* Now see if the item is refcount locked */
+        // 如果不为2，表明有其他线程正在使用它。
         if (refcount_incr(&search->refcount) != 2) {
             /* Avoid pathological case with ref'ed items in tail */
             do_item_update_nolock(search);
@@ -377,7 +378,7 @@ void do_item_remove(item *it) {
     assert(it->refcount > 0);
 
     if (refcount_decr(&it->refcount) == 0) {
-        item_free(it);
+        item_free(it);   // 放入free list中
     }
 }
 
@@ -417,7 +418,7 @@ int do_item_replace(item *it, item *new_it, const uint32_t hv) {
     assert((it->it_flags & ITEM_SLABBED) == 0);
 
     do_item_unlink(it, hv);
-    return do_item_link(new_it, hv);
+    return do_item_link(new_it, hv);  // 存数据
 }
 
 /*@null@*/

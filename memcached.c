@@ -2293,6 +2293,7 @@ enum store_item_type do_store_item(item *it, int comm, conn *c, const uint32_t h
     item *new_it = NULL;
     int flags;
 
+    // 根据不同的命令执行不同的操作，CAS在这里起作用了。
     if (old_it != NULL && comm == NREAD_ADD) {
         /* add only adds a nonexistent item, but promote to head of LRU */
         do_item_update(old_it);
