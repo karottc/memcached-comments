@@ -5068,6 +5068,7 @@ int main (int argc, char **argv) {
         NULL
     };
 
+    // 检查event的版本
     if (!sanitycheck()) {
         return EX_OSERR;
     }
@@ -5398,6 +5399,7 @@ int main (int argc, char **argv) {
         }
     }
 
+    // 默认的hash算法是：JENKINS_HASH, ->  jenkins_hash
     if (hash_init(hash_type) != 0) {
         fprintf(stderr, "Failed to initialize hash_algorithm!\n");
         exit(EX_USAGE);

@@ -59,6 +59,12 @@ static bool started_expanding = false;
  */
 static unsigned int expand_bucket = 0;
 
+/** 
+ * hash 算法：
+ * memcached的每个item根据对应的hash算法可以得到一个固定的hash value，然后再用
+ * 这个hash value与现有的hash table的长度做一个 & 操作，从而定为到具体的一个hash
+ * table中的bucket，所以即使hash table扩展了，也不影响定位。
+ */
 void assoc_init(const int hashtable_init) {
     if (hashtable_init) {
         hashpower = hashtable_init;
@@ -218,6 +224,7 @@ static void *assoc_maintenance_thread(void *arg) {
             item *it, *next;
             int bucket;
 
+            // 将扩展前的hash table的项移动到扩展后的hash table中。
             for (it = old_hashtable[expand_bucket]; NULL != it; it = next) {
                 next = it->h_next;
 
@@ -229,6 +236,7 @@ static void *assoc_maintenance_thread(void *arg) {
             old_hashtable[expand_bucket] = NULL;
 
             expand_bucket++;
+            // 相等，表示已经完全把原有的hash table中的项拷贝到了新的hash table中
             if (expand_bucket == hashsize(hashpower - 1)) {
                 expanding = false;
                 free(old_hashtable);
