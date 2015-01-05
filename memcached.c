@@ -219,7 +219,7 @@ static void settings_init(void) {
     settings.oldest_live = 0;
     settings.evict_to_free = 1;       /* push old items out of cache when memory runs out */
     settings.socketpath = NULL;       /* by default, not using a unix socket */
-    settings.factor = 1.25;
+    settings.factor = 1.25;          // 每个slab的增长因子
     settings.chunk_size = 48;         /* space for a modest key and value */
     settings.num_threads = 4;         /* N workers */
     settings.num_threads_per_udp = 0;

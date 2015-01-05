@@ -295,7 +295,7 @@ struct settings {
     int maxconns;       // 最大链接数，默认1024
     int port;           // tcp端口，默认是11211
     int udpport;
-    char *inter;
+    char *inter;        // 指定侦听接口（包括IP地址和端口），启动时候的-l选项
     int verbose;
     rel_time_t oldest_live; /* ignore existing items older than this */
     int evict_to_free;
@@ -313,6 +313,7 @@ struct settings {
     enum protocol binding_protocol;
     int backlog;
     int item_size_max;        /* Maximum item size, and upper end for slabs */ // 初始化为1M
+    // SASL全称Simple Authentication and Security Layer，是一种用来扩充C/S模式验证能力的机制
     bool sasl;              /* SASL on/off */
     bool maxconns_fast;     /* Whether or not to early close connections */
     bool lru_crawler;        /* Whether or not to enable the autocrawler thread */
