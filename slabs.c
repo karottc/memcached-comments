@@ -263,6 +263,7 @@ static void *do_slabs_alloc(const size_t size, unsigned int id) {
     return ret;
 }
 
+// 将item放入id对应的slabclass的free list中
 static void do_slabs_free(void *ptr, const size_t size, unsigned int id) {
     slabclass_t *p;
     item *it;
@@ -278,7 +279,7 @@ static void do_slabs_free(void *ptr, const size_t size, unsigned int id) {
     it = (item *)ptr;
     it->it_flags |= ITEM_SLABBED;
     it->prev = 0;
-    it->next = p->slots;
+    it->next = (item *)(p->slots);
     if (it->next) it->next->prev = it;
     p->slots = it;
 

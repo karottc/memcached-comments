@@ -184,6 +184,7 @@ int assoc_insert(item *it, const uint32_t hv) {
     return 1;
 }
 
+// 从hash table中删除item
 void assoc_delete(const char *key, const size_t nkey, const uint32_t hv) {
     item **before = _hashitem_before(key, nkey, hv);
 

@@ -298,7 +298,8 @@ struct settings {
     char *inter;        // 指定侦听接口（包括IP地址和端口），启动时候的-l选项
     int verbose;
     rel_time_t oldest_live; /* ignore existing items older than this */
-    int evict_to_free;
+    // 表示当内存用完时是否淘汰老的数据，通过-M参数设置，默认是1，表示淘汰老的数据
+    int evict_to_free;  
     char *socketpath;   /* path to unix socket if using local socket */
     int access;  /* access mask (a la chmod) for unix domain socket */
     double factor;          /* chunk size growth factor */ // 默认值是1.25

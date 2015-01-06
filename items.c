@@ -176,7 +176,7 @@ item *do_item_alloc(char *key, const size_t nkey, const int flags,
             do_item_unlink_nolock(it, hv);
             /* Initialize the item block: */
             it->slabs_clsid = 0;
-        } else if ((it = slabs_alloc(ntotal, id)) == NULL) {
+        } else if ((it = (item *)slabs_alloc(ntotal, id)) == NULL) {
             tried_alloc = 1;
             if (settings.evict_to_free == 0) {
                 itemstats[id].outofmemory++;
@@ -244,6 +244,7 @@ item *do_item_alloc(char *key, const size_t nkey, const int flags,
     return it;
 }
 
+// 将item返回slabclass的free list中
 void item_free(item *it) {
     size_t ntotal = ITEM_ntotal(it);
     unsigned int clsid;
@@ -295,6 +296,8 @@ static void item_link_q(item *it) { /* item is the new head */
     return;
 }
 
+// 将item从LRU队列中删除
+// LRU的队列由heads和tails维护
 static void item_unlink_q(item *it) {
     item **head, **tail;
     assert(it->slabs_clsid < LARGEST_ID);
@@ -358,6 +361,7 @@ void do_item_unlink(item *it, const uint32_t hv) {
 }
 
 /* FIXME: Is it necessary to keep this copy/pasted code? */
+// 从Hash table和LRU中移除item并把item放入free list中
 void do_item_unlink_nolock(item *it, const uint32_t hv) {
     MEMCACHED_ITEM_UNLINK(ITEM_key(it), it->nkey, it->nbytes);
     if ((it->it_flags & ITEM_LINKED) != 0) {
@@ -366,8 +370,9 @@ void do_item_unlink_nolock(item *it, const uint32_t hv) {
         stats.curr_bytes -= ITEM_ntotal(it);
         stats.curr_items -= 1;
         STATS_UNLOCK();
+        // 从hash table从删除
         assoc_delete(ITEM_key(it), it->nkey, hv);
-        item_unlink_q(it);
+        item_unlink_q(it);    // 从LRU队列中移除item
         do_item_remove(it);
     }
 }
