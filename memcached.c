@@ -5068,7 +5068,7 @@ int main (int argc, char **argv) {
         NULL
     };
 
-    // 检查event的版本
+    // 检查event的版本,这里要求libevent的版本至少1.3以上
     if (!sanitycheck()) {
         return EX_OSERR;
     }

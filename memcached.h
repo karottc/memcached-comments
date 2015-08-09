@@ -351,7 +351,7 @@ typedef struct _stritem {
     struct _stritem *next;    // 指向链表的下一个指针
     struct _stritem *prev;    // 指向链表的前一个指针
     struct _stritem *h_next;    /* hash chain next */
-    rel_time_t      time;       /* least recent access */
+    rel_time_t      time;       /* least recent access */   // 类型:typedef unsigned int rel_time_t;
     rel_time_t      exptime;    /* expire time */ // 消亡时间
     int             nbytes;     /* size of data */ 
     unsigned short  refcount;    // 引用计数
